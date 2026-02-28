@@ -46,6 +46,37 @@
             padding-bottom: 10px;
             margin-top: 0;
         }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .resultado-caja {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-left: 5px solid #4CAF50;
+            margin-top: 15px;
+        }
+
+        .error-caja {
+            background-color: #ffebee;
+            padding: 15px;
+            border-left: 5px solid #f44336;
+            margin-top: 15px;
+        }
     </style>
 </head>
 
@@ -56,30 +87,72 @@
         <a href="/logout">Cerrar Sesión</a>
     </div>
 
-    <body>
-        <div class="container">
-            <h1>Herramienta de Reconocimiento</h1>
-            <form method="POST">
-                <input type="text" name="dominio" placeholder="Ejemplo: utcancun.edu.mx" required>
+    <div class="container">
+        <div class="panel">
+            <h3>Footprinting</h3>
+            <p>Ingresa un dominio para recolectar información pública (Ej. uabc.mx, google.com)</p>
+
+            <form method="POST" action="/dashboard">
+                <input type="text" name="dominio" placeholder="ejemplo.com" required>
                 <button type="submit">Escanear</button>
             </form>
 
-            {% if datos %}
-            <div class="result">
-                <h3>Resultados del Escaneo:</h3>
-                <p><strong>Objetivo:</strong> {{ datos.objetivo }}</p>
-                <p><strong>Estatus HTTP:</strong> {{ datos.estatus_http }}</p>
-                <p><strong>Detalles:</strong> {{ datos.detalles }}</p>
-                <hr>
-                <p><em>Estado de Base de Datos: {{ datos.guardado_db }}</em></p>
+            {% if resultado %}
+            {% if resultado.error %}
+            <div class="error-caja">
+                <strong>❌ Error:</strong> {{ resultado.error }}
+            </div>
+            {% else %}
+            <div class="resultado-caja">
+                <p><strong>Objetivo:</strong> {{ resultado.dominio }}</p>
+                <p><strong>IP:</strong> {{ resultado.ip }}</p>
+                <p><strong>Servidor Web:</strong> {{ resultado.servidor }}</p>
+                <p><strong>Ubicación:</strong> {{ resultado.ubicacion }}</p>
+                <p><strong>HTTP Status:</strong> {{ resultado.estatus }}</p>
             </div>
             {% endif %}
+            {% endif %}
         </div>
-    </body>
-    <div class="panel">
-        <h3>🛡️ Auditoría: Logs de Aplicación (Nata)</h3>
-        <p>Aquí mostraremos la tabla de Supabase en tiempo real.</p>
-    </div>
+
+        <div class="panel">
+            <h3>Logs de Aplicación</h3>
+            <p style="font-size: 14px; color: #555;">Últimos 10 eventos registrados en el sistema:</p>
+
+            <div style="overflow-x:auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #1e1e2f; color: white;">
+                            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Usuario</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Acción</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ddd;">Objetivo</th>
+                            <th style="padding: 10px; border-bottom: 2px solid #ddd;">HTTP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ log.usuario.split('@')[0] }}
+                            </td>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ log.accion }}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ log.objetivo }}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #ddd;">
+                                {% if log.estatus_http == '200' %}
+                                <span style="color: green; font-weight: bold;">{{ log.estatus_http }}</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">{{ log.estatus_http }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 15px;">No hay registros de auditoría
+                                aún.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
 </body>
