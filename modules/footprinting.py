@@ -2,10 +2,7 @@ import socket
 import requests as req
 
 def realizar_escaneo(dominio):
-    """
-    Función de Diego: Recibe un dominio y extrae su información pública.
-    Devuelve un diccionario con los datos limpios.
-    """
+
     resultado = {
         "dominio": dominio,
         "ip": "Desconocida",

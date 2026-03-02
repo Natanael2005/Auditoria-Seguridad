@@ -81,6 +81,54 @@ def login():
 
 @app.route("/dashboard", methods=["GET", "POST"])
 def dashboard():
+    """Pantalla 1: La herramienta de Footprinting (Diego)"""
+    if "usuario_actual" not in session:
+        return redirect(url_for("login"))
+
+    usuario = session["usuario_actual"]
+    resultado_escaneo = None
+
+    if request.method == "POST":
+        dominio_ingresado = request.form.get("dominio")
+        ip_del_usuario = request.remote_addr
+
+        resultado_escaneo = realizar_escaneo(dominio_ingresado)
+
+        if resultado_escaneo["error"]:
+            detalles_log = resultado_escaneo["error"]
+            estatus_final = 500
+        else:
+            detalles_log = f"IP: {resultado_escaneo['ip']} | Servidor: {resultado_escaneo['servidor']} | País: {resultado_escaneo['ubicacion']}"
+            estatus_final = resultado_escaneo["estatus"]
+
+        registrar_log_app(
+            usuario=usuario,
+            accion="Escaneo Footprinting",
+            objetivo=dominio_ingresado,
+            estatus_http=estatus_final,
+            ip_cliente=ip_del_usuario,
+            detalles=detalles_log,
+        )
+
+    # Ya no le mandamos los logs aquí, solo el resultado del escaneo
+    return render_template(
+        "dashboard.html", usuario=usuario, resultado=resultado_escaneo
+    )
+
+
+@app.route("/logs")
+def vista_logs():
+    """Pantalla 2: El Panel de Auditoría (Nata)"""
+    if "usuario_actual" not in session:
+        return redirect(url_for("login"))
+
+    usuario = session["usuario_actual"]
+
+    # Aquí traemos los logs. Le puse 50 para que veas más historial ya que tiene su propia pantalla
+    logs_recientes = obtener_logs_app(50)
+
+    # Renderizamos una plantilla nueva que crearemos en el paso 3
+    return render_template("logs.html", usuario=usuario, logs=logs_recientes)
     # 1. Verificamos que el usuario tenga sesión iniciada
     if "usuario_actual" not in session:
         return redirect(url_for("login"))

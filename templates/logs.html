@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Auditoría - Seguridad</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .navbar { background-color: #1e1e2f; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; padding: 0 15px; font-weight: bold; }
+        .navbar a:hover { color: #4CAF50; }
+        .nav-links { display: flex; align-items: center; }
+        .btn-logout { color: #ff4d4d !important; border-left: 1px solid #555; margin-left: 10px; padding-left: 20px !important; }
+        .container { padding: 40px; display: flex; justify-content: center; }
+        .panel { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 1000px; }
+        h3 { border-bottom: 2px solid #2196F3; padding-bottom: 10px; margin-top: 0; color: #1e1e2f; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; margin-top: 20px; }
+        th { padding: 12px 15px; border-bottom: 2px solid #ddd; background-color: #1e1e2f; color: white; }
+        td { padding: 12px 15px; border-bottom: 1px solid #ddd; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div>Usuario: <strong>{{ usuario }}</strong></div>
+        <div class="nav-links">
+            <a href="/dashboard">Escáner</a>
+            <a href="/logs" style="color: #2196F3;">Logs de Auditoría</a>
+            <a href="/logout" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="panel">
+            <h3>Panel de Auditoría de Aplicación (App Logs)</h3>
+            <p style="color: #555; font-size: 14px;">Historial de eventos de seguridad registrados en Supabase.</p>
+            
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Acción</th>
+                            <th>Objetivo</th>
+                            <th>HTTP</th>
+                            <th>Detalles Técnicos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td><strong>{{ log.usuario.split('@')[0] }}</strong></td>
+                            <td>{{ log.accion }}</td>
+                            <td>{{ log.objetivo }}</td>
+                            <td>
+                                {% if log.estatus_http == '200' %}
+                                    <span style="color: green; font-weight: bold;">{{ log.estatus_http }}</span>
+                                {% else %}
+                                    <span style="color: red; font-weight: bold;">{{ log.estatus_http }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-family: monospace; font-size: 12px; color: #666;">{{ log.detalles }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px;">No hay registros de auditoría en el sistema.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
