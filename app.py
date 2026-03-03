@@ -165,4 +165,7 @@ def logout():
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Render asigna un puerto dinámico, si no existe usamos el 5000 por defecto
+    port = int(os.environ.get("PORT", 5000))
+    # Importante: host='0.0.0.0' para que sea accesible desde internet
+    app.run(host='0.0.0.0', port=port, debug=False)
