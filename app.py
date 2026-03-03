@@ -108,13 +108,13 @@ def accion_empleado():
     ip_del_usuario = request.remote_addr
 
     if tipo_accion == "nomina":
-        detalles, estatus, msj = "Visualizó recibo de nómina.", 200, "📄 Descargando recibo de nómina..."
+        detalles, estatus, msj = "Visualizó recibo de nómina.", 200, "Descargando recibo de nómina..."
     elif tipo_accion == "directorio":
-        detalles, estatus, msj = "Accedió al directorio de empleados.", 200, "👥 Abriendo directorio..."
+        detalles, estatus, msj = "Accedió al directorio de empleados.", 200, "Abriendo directorio..."
     elif tipo_accion == "mensajes":
-        detalles, estatus, msj = "Revisó bandeja de entrada.", 200, "✉️ No tienes mensajes nuevos."
+        detalles, estatus, msj = "Revisó bandeja de entrada.", 200, "No tienes mensajes nuevos."
     elif tipo_accion == "finanzas":
-        detalles, estatus, msj = "ALERTA: Intento de acceso a DB Financiera.", 403, "❌ Error 403: Permisos insuficientes."
+        detalles, estatus, msj = "ALERTA: Intento de acceso a DB Financiera.", 403, "Error 403: Permisos insuficientes."
     else:
         detalles, estatus, msj = "Acción desconocida.", 400, "Acción no válida."
 
