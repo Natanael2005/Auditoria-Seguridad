@@ -5,7 +5,6 @@ import logging
 # 2. Librerías externas (Terceros)
 from flask import Flask, request, render_template, redirect, url_for, session
 from dotenv import load_dotenv
-from werkzeug.middleware.proxy_fix import ProxyFix
 
 # 3. Tus propios módulos (El código que tú y Diego hicieron)
 from modules.auditoria import registrar_log_app, obtener_logs_app, supabase
@@ -16,7 +15,6 @@ load_dotenv()
 
 # Iniciamos la aplicación
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app, x_for=2, x_proto=1, x_host=1, x_prefix=1)
 
 # Configuramos la llave secreta
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
@@ -35,10 +33,14 @@ server_logger = configurar_server_logs()
 @app.after_request
 def log_server_request(response):
     """Guarda automáticamente cada petición HTTP en el archivo de texto local."""
+    
+    # MÉTODO FRANCOTIRADOR: Buscar la IP real en los headers, si no está, usar la normal
+    ip_real = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+
     server_logger.info(
         "Peticion web",
         extra={
-            "clientip": request.remote_addr,
+            "clientip": ip_real,
             "method": request.method,
             "path": request.path,
             "status": response.status_code,
@@ -63,7 +65,9 @@ def login():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        ip_del_usuario = request.remote_addr
+        
+        # Captura la IP real para el App Log
+        ip_del_usuario = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
         try:
             auth_response = supabase.auth.sign_in_with_password({"email": email, "password": password})
@@ -91,7 +95,9 @@ def register():
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
-        ip_del_usuario = request.remote_addr
+        
+        # Captura la IP real para el App Log
+        ip_del_usuario = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
         try:
             auth_response = supabase.auth.sign_up({"email": email, "password": password})
@@ -119,7 +125,9 @@ def accion_empleado():
 
     usuario = session["usuario_actual"]
     tipo_accion = request.form.get("accion")
-    ip_del_usuario = request.remote_addr
+    
+    # Captura la IP real para el App Log
+    ip_del_usuario = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
     if tipo_accion == "nomina":
         detalles, estatus, msj = "Visualizó recibo de nómina.", 200, "Descargando recibo de nómina..."
@@ -139,12 +147,14 @@ def accion_empleado():
 def ruta_finanzas():
     """Ruta oculta de alta sensibilidad"""
     usuario = session.get("usuario_actual", "Anonimo")
+    ip_real = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    
     registrar_log_app(
         usuario=usuario, 
         accion="Acceso a Ruta Oculta", 
         objetivo="Finanzas_Direct", 
         estatus_http=403, 
-        ip_cliente=request.remote_addr, 
+        ip_cliente=ip_real, 
         detalles="ALERTA: Intento de acceso directo a base de datos financiera."
     )
     # Mostramos un error 403 real para la auditoría
@@ -154,12 +164,14 @@ def ruta_finanzas():
 def ruta_cctv():
     """Ruta oculta de cámaras"""
     usuario = session.get("usuario_actual", "Anonimo")
+    ip_real = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    
     registrar_log_app(
         usuario=usuario, 
         accion="Acceso a Ruta Oculta", 
         objetivo="CCTV_Stream", 
         estatus_http=403, 
-        ip_cliente=request.remote_addr, 
+        ip_cliente=ip_real, 
         detalles="ALERTA: Intento de visualización de cámaras sin privilegios."
     )
     return "<h1>Acceso Denegado</h1><p>Esta es una red restringida de Leona Corp.</p>", 403
@@ -174,12 +186,16 @@ def vista_logs():
 @app.route("/logout")
 def logout():
     if "usuario_actual" in session:
-        registrar_log_app(usuario=session["usuario_actual"], accion="Logout", objetivo="Portal Leona Corp", estatus_http=200, ip_cliente=request.remote_addr, detalles="Sesión cerrada.")
+        ip_real = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+        registrar_log_app(usuario=session["usuario_actual"], accion="Logout", objetivo="Portal Leona Corp", estatus_http=200, ip_cliente=ip_real, detalles="Sesión cerrada.")
         session.pop("usuario_actual", None)
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    # Render asigna un puerto dinámico, si no existe usamos el 5000 por defecto
     port = int(os.environ.get("PORT", 5000))
-    # Importante: host='0.0.0.0' para que sea accesible desde internet
-    app.run(host='0.0.0.0', port=port, debug=False)
+    print(f"✅ [Sistema] Servidor de Leona Corp iniciado en el puerto: {port}")
+    
+    # Si detecta que estamos en la nube (Render), usa 0.0.0.0. Si estás en tu Windows local, usa 127.0.0.1
+    host_ip = '0.0.0.0' if os.environ.get("RENDER") else '127.0.0.1'
+    
+    app.run(host=host_ip, port=port, debug=False)
