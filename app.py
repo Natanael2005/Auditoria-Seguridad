@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Flask, logging, request, render_template, redirect, url_for, session
 from modules.auditoria import registrar_log_app, supabase
 from modules.server_logs import configurar_server_logs
 import os
@@ -10,6 +10,9 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta_auditoria_2026"
+
+log_werkzeug = logging.getLogger('werkzeug')
+log_werkzeug.setLevel(logging.ERROR)
 
 
 # =====================================================================
