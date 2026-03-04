@@ -1,16 +1,26 @@
-from flask import Flask, logging, request, render_template, redirect, url_for, session
-from modules.auditoria import registrar_log_app, supabase
-from modules.server_logs import configurar_server_logs
+# 1. Librerías estándar de Python
 import os
-from modules.footprinting import realizar_escaneo
-from dotenv import load_dotenv
-from modules.auditoria import registrar_log_app, obtener_logs_app, supabase
+import logging 
 
+# 2. Librerías externas (Terceros)
+from flask import Flask, request, render_template, redirect, url_for, session
+from dotenv import load_dotenv
+
+# 3. Tus propios módulos (El código que tú y Diego hicieron)
+from modules.auditoria import registrar_log_app, obtener_logs_app, supabase
+from modules.server_logs import configurar_server_logs
+from modules.footprinting import realizar_escaneo
+
+# Cargamos las variables de entorno (.env)
 load_dotenv()
 
+# Iniciamos la aplicación
 app = Flask(__name__)
-app.secret_key = "clave_super_secreta_auditoria_2026"
 
+# Configuramos la llave secreta
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+
+# Apagamos el log ruidoso de Flask para dejar solo el nuestro
 log_werkzeug = logging.getLogger('werkzeug')
 log_werkzeug.setLevel(logging.ERROR)
 
