@@ -5,17 +5,18 @@ import logging
 # 2. Librerías externas (Terceros)
 from flask import Flask, request, render_template, redirect, url_for, session
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # 3. Tus propios módulos (El código que tú y Diego hicieron)
 from modules.auditoria import registrar_log_app, obtener_logs_app, supabase
 from modules.server_logs import configurar_server_logs
-from modules.footprinting import realizar_escaneo
 
 # Cargamos las variables de entorno (.env)
 load_dotenv()
 
 # Iniciamos la aplicación
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Configuramos la llave secreta
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
