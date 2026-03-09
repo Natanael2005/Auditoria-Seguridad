@@ -137,6 +137,9 @@ def accion_empleado():
         detalles, estatus, msj = "Revisó bandeja de entrada.", 200, "No tienes mensajes nuevos."
     elif tipo_accion == "finanzas":
         detalles, estatus, msj = "ALERTA: Intento de acceso a DB Financiera.", 403, "Error 403: Permisos insuficientes."
+    elif tipo_accion == "ticket_soporte":
+        mensaje = request.form.get("mensaje_ticket", "Sin mensaje")
+        detalles, estatus, msj = f"Ticket creado: '{mensaje}'", 200, "Ticket enviado a soporte. El administrador TI lo revisará pronto."
     else:
         detalles, estatus, msj = "Acción desconocida.", 400, "Acción no válida."
 
@@ -190,6 +193,57 @@ def logout():
         registrar_log_app(usuario=session["usuario_actual"], accion="Logout", objetivo="Portal Leona Corp", estatus_http=200, ip_cliente=ip_real, detalles="Sesión cerrada.")
         session.pop("usuario_actual", None)
     return redirect(url_for("login"))
+
+    # =====================================================================
+# RUTAS TRAMPA (HONEYPOTS PARA EL AUDITOR)
+# =====================================================================
+
+@app.route("/robots.txt")
+def robots_txt():
+    """El mapa del tesoro para cualquier atacante haciendo OSINT"""
+    usuario = session.get("usuario_actual", "Explorador Anónimo")
+    registrar_log_app(usuario=usuario, accion="Lectura de robots.txt", objetivo="Archivos de Servidor", estatus_http=200, ip_cliente=request.remote_addr, detalles="El atacante descubrió las rutas ocultas mediante OSINT.")
+    
+    # Este texto le dirá a Gobuster (y a ti) dónde están los secretos
+    contenido = "User-agent: *\nDisallow: /admin_financiero\nDisallow: /cctv_interno\nDisallow: /respaldos_cloud\nDisallow: /api/db_usuarios_passwords\n"
+    return contenido, 200, {'Content-Type': 'text/plain'}
+
+@app.route("/respaldos_cloud")
+def ruta_respaldos():
+    """Ruta oculta ACCESIBLE: Simula un servidor de archivos olvidado"""
+    usuario = session.get("usuario_actual", "Intruso")
+    registrar_log_app(usuario=usuario, accion="Acceso a Respaldos", objetivo="Honeypot de Archivos", estatus_http=200, ip_cliente=request.remote_addr, detalles="PELIGRO: Intruso visualizando supuestos respaldos confidenciales de la empresa.")
+    
+    # Renderizamos un HTML falso que parece un directorio de descargas antiguo
+    html_falso = """
+    <body style="font-family: monospace; background: #fff; color: #000; padding: 20px;">
+        <h1>Index of /respaldos_cloud/2026/</h1>
+        <hr>
+        <ul style="line-height: 1.8; font-size: 16px;">
+            <li><a href="#">bd_finanzas_marzo_2026.sql.zip</a> (2.4 GB)</li>
+            <li><a href="#">codigos_fuente_leona_corp.tar.gz</a> (800 MB)</li>
+            <li><a href="#">correos_directivos_backup.pst</a> (1.2 GB)</li>
+            <li><a href="#">passwords_empleados_cleartext.txt</a> (12 KB)</li>
+        </ul>
+        <hr>
+        <p><i>Nota del SysAdmin: No borrar, pendiente de migrar a los servidores de AWS.</i></p>
+    </body>
+    """
+    return html_falso, 200
+
+@app.route("/api/db_usuarios_passwords")
+def ruta_api_filtrada():
+    """Ruta oculta ACCESIBLE: Simula una API vulnerable que filtra JSON"""
+    usuario = session.get("usuario_actual", "Intruso")
+    registrar_log_app(usuario=usuario, accion="Fuga de Datos API", objetivo="Honeypot JSON", estatus_http=200, ip_cliente=request.remote_addr, detalles="PELIGRO: Extracción de datos de usuarios vía API no protegida.")
+    
+    # Importa jsonify hasta arriba en tu app.py si no lo tienes: from flask import jsonify
+    from flask import jsonify
+    datos_falsos = [
+        {"id": 1, "user": "admin_root", "pass_hash": "e10adc3949ba59abbe56e057f20f883e", "role": "SuperAdmin"},
+        {"id": 2, "user": "contabilidad_jefe", "pass_hash": "123456_facil", "role": "Finanzas"}
+    ]
+    return jsonify(datos_falsos), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

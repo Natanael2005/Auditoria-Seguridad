@@ -291,6 +291,17 @@ footer hr {
         </div>
     </div>
 
+    <div class="panel" style="margin-top: 20px; grid-column: 1 / -1;">
+            <h2>Levantar Ticket de Soporte TI</h2>
+            <p style="color: #666; font-size: 14px;">¿Tienes problemas con tu equipo o el portal? Envía un reporte directo a nuestro Administrador de Sistemas (Felipe Natanael).</p>
+            
+            <form method="POST" action="/accion_empleado" style="display: flex; gap: 10px; margin-top: 15px;">
+                <input type="hidden" name="accion" value="ticket_soporte">
+                <input type="text" name="mensaje_ticket" placeholder="Describe tu problema aquí (Ej. Mi monitor no enciende)..." style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 4px;" required>
+                <button type="submit" class="btn-accion" style="width: auto; padding: 12px 25px; background-color: #28a745;">📤 Enviar Ticket a TI</button>
+            </form>
+    </div>
+
 </div>
 
 <footer>
